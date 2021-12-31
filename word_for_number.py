@@ -99,7 +99,9 @@ def word_for(number: int):
 def large_number(power: int):
     """Constructs the name for a large number. (Credit for conversions: http://home.kpn.nl/vanadovv/BignumEN.html)"""
     if power < 6:
-        raise ValueError('Power too low for a large number, must be at least 6')
+        raise ValueError('Power too low for a large number, must be at least 6 (serial 1).')
+    if power > 3003:
+        raise ValueError('Power too large to be represented, must be less than 3003 (serial 1000).')
     serial = split_int((power - 3) // 3)
     if len(serial) == 1:
         return million_words[serial[0]]
@@ -108,12 +110,13 @@ def large_number(power: int):
         build.insert(0, bigger_hundreds[serial[0]])
         build.insert(0, bigger_tens[serial[1]])
         del serial[0], serial[1]
-    elif len(serial) == 2:
+    else:
         build.insert(0, bigger_tens[serial[0]])
         del serial[0]
-    else:
-        raise OverflowError('Power was too large to be represented, must be less than 1000.')
-    check = build[0][0]
+    try:
+        check = build[0][0]
+    except IndexError:  # if power == 303 here, build is ['', 'centi', 'llion'], which is bad
+        check = build[1][0]
     match (serial[0], check):
         case (0 | 1 | 2 | 4 | 5 | 8, _):
             build.insert(0, bigger_units[serial[0]])
@@ -144,8 +147,8 @@ def large_number(power: int):
         case (9, _):
             build.insert(0, 'nove')
 
-    if build[len(build) - 2][len(build[len(build) - 2]) - 1] not in ['a', 'e', 'i', 'o', 'u']:
-        build.insert(len(build) - 2, 'i')  # ^ that's the final character of the second-to-last element
+    if build[-2][-1] == 'a':
+        build[-2] = build[-2][0: -1] + 'i'
 
     return ''.join(build)
 
